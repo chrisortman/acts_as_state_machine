@@ -5,7 +5,8 @@ class ActsAsStateMachineTest < ActiveSupport::TestCase
   fixtures :conversations
   
   def test_no_initial_value_raises_exception
-    assert_raise(NoInitialState) {
+    assert_raise(ActsAsStateMachine::NoInitialState) {
+      Person.send(:include,ActsAsStateMachine)
       Person.acts_as_state_machine({})
     }
   end
@@ -47,9 +48,9 @@ class ActsAsStateMachineTest < ActiveSupport::TestCase
   def test_transition_table
     tt = Conversation.transition_table
     
-    assert tt[:new_message].include?(SupportingClasses::StateTransition.new(:from => :read, :to => :needs_attention))
-    assert tt[:new_message].include?(SupportingClasses::StateTransition.new(:from => :closed, :to => :needs_attention))
-    assert tt[:new_message].include?(SupportingClasses::StateTransition.new(:from => :awaiting_response, :to => :needs_attention))
+    assert tt[:new_message].include?(ActsAsStateMachine::SupportingClasses::StateTransition.new(:from => :read, :to => :needs_attention))
+    assert tt[:new_message].include?(ActsAsStateMachine::SupportingClasses::StateTransition.new(:from => :closed, :to => :needs_attention))
+    assert tt[:new_message].include?(ActsAsStateMachine::SupportingClasses::StateTransition.new(:from => :awaiting_response, :to => :needs_attention))
   end
 
   def test_next_state_for_event
@@ -166,52 +167,27 @@ class ActsAsStateMachineTest < ActiveSupport::TestCase
   end
   
   def test_find_all_in_state
-    cs = Conversation.find_in_state(:all, :read)
+    cs = Conversation.in_state(:read).all
     
     assert_equal 2, cs.size
   end
   
   def test_find_first_in_state
-    c = Conversation.find_in_state(:first, :read)
+    c = Conversation.in_state(:read).first
     
     assert_equal conversations(:first).id, c.id
   end
   
-  def test_find_all_in_state_with_conditions
-    cs = Conversation.find_in_state(:all, :read, :conditions => ['subject = ?', conversations(:second).subject])
-    
-    assert_equal 1, cs.size
-    assert_equal conversations(:second).id, cs.first.id
-  end
-  
-  def test_find_first_in_state_with_conditions
-    c = Conversation.find_in_state(:first, :read, :conditions => ['subject = ?', conversations(:second).subject])
-    assert_equal conversations(:second).id, c.id
-  end
-  
   def test_count_in_state
-    cnt0 = Conversation.count(['state_machine = ?', 'read'])
-    cnt  = Conversation.count_in_state(:read)
+    cnt0 = Conversation.where('state_machine = ?','read').count
+    cnt  = Conversation.in_state(:read).count
     
     assert_equal cnt0, cnt
   end
   
-  def test_count_in_state_with_conditions
-    cnt0 = Conversation.count(['state_machine = ? AND subject = ?', 'read', 'Foo'])
-    cnt  = Conversation.count_in_state(:read, ['subject = ?', 'Foo'])
-    
-    assert_equal cnt0, cnt
-  end
-  
-  def test_find_in_invalid_state_raises_exception
-    assert_raise(InvalidState) {
-      Conversation.find_in_state(:all, :dead)
-    }
-  end
-  
-  def test_count_in_invalid_state_raises_exception
-    assert_raise(InvalidState) {
-      Conversation.count_in_state(:dead)
+  def test_in_state_invalid_state_raises_exception
+    assert_raise(ActsAsStateMachine::InvalidState) {
+      Conversation.in_state(:dead)
     }
   end
 

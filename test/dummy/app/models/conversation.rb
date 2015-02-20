@@ -1,7 +1,10 @@
 class Conversation < ActiveRecord::Base
+  attr_accessible :closed, :state_machine, :subject
   attr_writer :can_close
   attr_accessor :read_enter, :read_exit, :read_after_first, :read_after_second,
                 :closed_after, :needs_attention_enter, :needs_attention_after
+
+  include ActsAsStateMachine
 
   acts_as_state_machine :initial => :needs_attention, :column => 'state_machine'
 

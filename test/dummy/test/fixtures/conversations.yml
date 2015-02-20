@@ -1,0 +1,11 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  state_machine: MyString
+  subject: MyString
+  closed: false
+
+two:
+  state_machine: MyString
+  subject: MyString
+  closed: false
